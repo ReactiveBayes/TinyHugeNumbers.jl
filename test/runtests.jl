@@ -1,11 +1,11 @@
 using TinyHugeNumbers
 using Test
 
+import TinyHugeNumbers: TinyNumber, HugeNumber
+
+struct ArbitraryFloatType <: AbstractFloat end 
+
 @testset "TinyHugeNumbers.jl" begin
-
-    import TinyHugeNumbers: TinyNumber, HugeNumber
-
-    struct ArbitraryFloatType <: AbstractFloat end 
 
     Base.eps(::Type{ ArbitraryFloatType }) = 0.1
     Base.convert(::Type{ ArbitraryFloatType }, ::Integer) = ArbitraryFloatType() # for testing
