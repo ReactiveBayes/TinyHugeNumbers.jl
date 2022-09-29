@@ -9,6 +9,9 @@ struct ArbitraryFloatType <: AbstractFloat end
 
     Base.eps(::Type{ ArbitraryFloatType }) = 0.1
     Base.convert(::Type{ ArbitraryFloatType }, ::Integer) = ArbitraryFloatType() # for testing
+
+    @test repr(tiny) == "tiny"
+    @test repr(huge) == "huge"
     
     @test typeof(tiny) === TinyNumber
     @test typeof(huge) === HugeNumber
@@ -66,6 +69,11 @@ struct ArbitraryFloatType <: AbstractFloat end
     @test @inferred clamp(big"1.0", tiny, huge) == big"1.0"
     @test @inferred clamp(big"0.0", tiny, huge) == big"1e-24"
     @test @inferred clamp(big"1e25", tiny, huge) == big"1e+24"
+
+    for T in (Float64, Float32, BigFloat, ArbitraryFloatType)
+        @test promote_type(T, TinyNumber, HugeNumber) == T
+        @test promote_type(T, HugeNumber, TinyNumber) == T
+    end
 
     for a in (1, 1.0, 0, 0.0, 1.0f0, 0.0f0, Int32(0), Int32(1), big"1", big"1.0", big"0", big"0.0")
         T = typeof(a)
