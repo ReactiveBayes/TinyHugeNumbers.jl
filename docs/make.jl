@@ -7,11 +7,11 @@ makedocs(;
     modules  = [ TinyHugeNumbers ],
     strict   = [ :doctest, :eval_block, :example_block, :meta_block, :parse_error, :setup_block ],
     authors  = "Bagaev Dmitry <bvdmitri@gmail.com> and contributors",
-    repo     = "https://github.com/bvdmitri/TinyHugeNumbers.jl/blob/{commit}{path}#{line}",
+    repo     = "https://github.com/reactivebayes/TinyHugeNumbers.jl/blob/{commit}{path}#{line}",
     sitename = "TinyHugeNumbers.jl",
     format   = Documenter.HTML(;
         prettyurls = get(ENV, "CI", "false") == "true",
-        canonical  = "https://bvdmitri.github.io/TinyHugeNumbers.jl",
+        canonical  = "https://reactivebayes.github.io/TinyHugeNumbers.jl",
         edit_link  = "main",
         assets     = String[],
     ),
@@ -20,4 +20,4 @@ makedocs(;
     ],
 )
 
-deploydocs(; repo="github.com/bvdmitri/TinyHugeNumbers.jl", devbranch="main")
+deploydocs(; repo="github.com/reactivebayes/TinyHugeNumbers.jl", devbranch="main")
