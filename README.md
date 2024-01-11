@@ -1,9 +1,9 @@
 # TinyHugeNumbers
 
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://bvdmitri.github.io/TinyHugeNumbers.jl/stable/)
-[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://bvdmitri.github.io/TinyHugeNumbers.jl/dev/)
-[![Build Status](https://github.com/bvdmitri/TinyHugeNumbers.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/bvdmitri/TinyHugeNumbers.jl/actions/workflows/CI.yml?query=branch%3Amain)
-[![Coverage](https://codecov.io/gh/bvdmitri/TinyHugeNumbers.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/bvdmitri/TinyHugeNumbers.jl)
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://reactivebayes.github.io/TinyHugeNumbers.jl/stable/)
+[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://reactivebayes.github.io/TinyHugeNumbers.jl/dev/)
+[![Build Status](https://github.com/reactivebayes/TinyHugeNumbers.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/reactivebayes/TinyHugeNumbers.jl/actions/workflows/CI.yml?query=branch%3Amain)
+[![Coverage](https://codecov.io/gh/reactivebayes/TinyHugeNumbers.jl/branch/main/graph/badge.svg)](https://codecov.io/gh/reactivebayes/TinyHugeNumbers.jl)
 [![PkgEval](https://JuliaCI.github.io/NanosoldierReports/pkgeval_badges/T/TinyHugeNumbers.svg)](https://JuliaCI.github.io/NanosoldierReports/pkgeval_badges/report.html)
 
 The `TinyHugeNumbers` package exports `tiny` and `huge` objects to represent tiny and huge numbers. These objects aren't really numbers and behave differently depending on the context. They do support any operation that is defined for Real numbers. For more info see Julia's documentation about promotion.
