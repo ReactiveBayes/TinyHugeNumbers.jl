@@ -20,4 +20,4 @@ makedocs(;
     ],
 )
 
-deploydocs(; repo="github.com/reactivebayes/TinyHugeNumbers.jl", devbranch="main")
+deploydocs(; repo="github.com/ReactiveBayes/TinyHugeNumbers.jl", devbranch="main", forcepush = true)
