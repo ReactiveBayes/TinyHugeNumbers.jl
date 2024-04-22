@@ -1,6 +1,6 @@
 module TinyHugeNumbers
 
-export tiny, huge 
+export tiny, huge
 
 import Base: show, convert, promote_rule
 
@@ -11,18 +11,18 @@ struct TinyNumber <: Real end
 
 Base.show(io::IO, ::TinyNumber) = print(io, "tiny")
 
-Base.convert(::Type{F}, ::TinyNumber) where {F <: AbstractFloat} = 10eps(F)
-Base.convert(::Type{Float32}, ::TinyNumber)  = 1.0f-6
-Base.convert(::Type{Float64}, ::TinyNumber)  = 1e-12
+Base.convert(::Type{F}, ::TinyNumber) where {F<:AbstractFloat} = 10eps(F)
+Base.convert(::Type{Float32}, ::TinyNumber) = 1.0f-6
+Base.convert(::Type{Float64}, ::TinyNumber) = 1e-12
 Base.convert(::Type{BigFloat}, ::TinyNumber) = big"1e-24"
 
-Base.promote_rule(::Type{TinyNumber}, ::Type{I}) where {I <: Integer}       = promote_rule(TinyNumber, promote_type(I, Float64))
-Base.promote_rule(::Type{TinyNumber}, ::Type{F}) where {F <: AbstractFloat} = F
+Base.promote_rule(::Type{TinyNumber}, ::Type{I}) where {I<:Integer} = promote_type(TinyNumber, promote_type(I, Float64))
+Base.promote_rule(::Type{TinyNumber}, ::Type{F}) where {F<:AbstractFloat} = F
 
-(::Type{T})(::TinyNumber) where {T <: AbstractFloat} = convert(T, tiny)
+(::Type{T})(::TinyNumber) where {T<:AbstractFloat} = convert(T, tiny)
 
-(::TinyNumber)(::Type{ T }) where {T} = convert(T, TinyNumber())
-(::TinyNumber)(something)             = convert(typeof(something), TinyNumber())
+(::TinyNumber)(::Type{T}) where {T} = convert(T, TinyNumber())
+(::TinyNumber)(something) = convert(typeof(something), TinyNumber())
 
 """
     tiny
@@ -69,18 +69,18 @@ struct HugeNumber <: Real end
 
 Base.show(io::IO, ::HugeNumber) = print(io, "huge")
 
-Base.convert(::Type{F}, ::HugeNumber) where {F <: AbstractFloat} = inv(tiny(F))
-Base.convert(::Type{Float32}, ::HugeNumber)  = 1.0f+6
-Base.convert(::Type{Float64}, ::HugeNumber)  = 1e+12
+Base.convert(::Type{F}, ::HugeNumber) where {F<:AbstractFloat} = inv(tiny(F))
+Base.convert(::Type{Float32}, ::HugeNumber) = 1.0f+6
+Base.convert(::Type{Float64}, ::HugeNumber) = 1e+12
 Base.convert(::Type{BigFloat}, ::HugeNumber) = big"1e+24"
 
-Base.promote_rule(::Type{HugeNumber}, ::Type{I}) where {I <: Integer}       = promote_rule(HugeNumber, promote_type(I, Float64))
-Base.promote_rule(::Type{HugeNumber}, ::Type{F}) where {F <: AbstractFloat} = F
+Base.promote_rule(::Type{HugeNumber}, ::Type{I}) where {I<:Integer} = promote_type(HugeNumber, promote_type(I, Float64))
+Base.promote_rule(::Type{HugeNumber}, ::Type{F}) where {F<:AbstractFloat} = F
 
-(::Type{T})(::HugeNumber) where {T <: AbstractFloat} = convert(T, huge)
+(::Type{T})(::HugeNumber) where {T<:AbstractFloat} = convert(T, huge)
 
-(::HugeNumber)(::Type{ T }) where {T} = convert(T, HugeNumber())
-(::HugeNumber)(something)             = convert(typeof(something), HugeNumber())
+(::HugeNumber)(::Type{T}) where {T} = convert(T, HugeNumber())
+(::HugeNumber)(something) = convert(typeof(something), HugeNumber())
 
 """
     huge
@@ -120,9 +120,23 @@ const huge = HugeNumber()
 
 ## ------------------------------------------------------------------------------------ ##
 
-Base.promote_type(::Type{T}, ::Type{TinyNumber}, ::Type{HugeNumber}) where {T} =
-    promote_type(promote_type(T, TinyNumber), HugeNumber)
-Base.promote_type(::Type{T}, ::Type{HugeNumber}, ::Type{TinyNumber}) where {T} =
-    promote_type(promote_type(T, HugeNumber), TinyNumber)
+# A special structure that is used to promote `TinyNumber` and `HugeNumber` to the same type
+# but it cannot be instantiated, this might be useful in situations like `clamp(value, tiny, huge)`
+# in this case Julia attempts first to promote `tiny` and `huge` to the same type and then
+# uses the result to promote `value` to the resulting type. However, there is no "common" type for
+# both `tiny` and `huge` so we introduce a special structure that will accomodate that
+# see also: https://github.com/ReactiveBayes/TinyHugeNumbers.jl/issues/3
+struct PromoteTinyOrHuge end
+
+PromoteTinyOrHuge() = error("Cannot instantiate an internal structure for promotion.")
+
+Base.promote_rule(::Type{T}, ::Type{PromoteTinyOrHuge}) where {T} = T
+Base.promote_rule(::Type{PromoteTinyOrHuge}, ::Type{PromoteTinyOrHuge}) = PromoteTinyOrHuge
+Base.promote_rule(::Type{TinyNumber}, ::Type{PromoteTinyOrHuge}) = PromoteTinyOrHuge
+Base.promote_rule(::Type{HugeNumber}, ::Type{PromoteTinyOrHuge}) = PromoteTinyOrHuge
+Base.promote_rule(::Type{TinyNumber}, ::Type{HugeNumber}) = PromoteTinyOrHuge
+
+Base.convert(::Type{PromoteTinyOrHuge}, ::TinyNumber) = error("Cannot convert `tiny` to `huge`. Are you trying to put `tiny` and `huge` in the same container (e.g. `Array`)?")
+Base.convert(::Type{PromoteTinyOrHuge}, ::HugeNumber) = error("Cannot convert `huge` to `tiny`. Are you trying to put `tiny` and `huge` in the same container (e.g. `Array`)?")
 
 end
