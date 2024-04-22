@@ -1,6 +1,6 @@
 module TinyHugeNumbers
 
-export tiny, huge 
+export tiny, huge
 
 import Base: show, convert, promote_rule
 
@@ -11,18 +11,18 @@ struct TinyNumber <: Real end
 
 Base.show(io::IO, ::TinyNumber) = print(io, "tiny")
 
-Base.convert(::Type{F}, ::TinyNumber) where {F <: AbstractFloat} = 10eps(F)
-Base.convert(::Type{Float32}, ::TinyNumber)  = 1.0f-6
-Base.convert(::Type{Float64}, ::TinyNumber)  = 1e-12
+Base.convert(::Type{F}, ::TinyNumber) where {F<:AbstractFloat} = 10eps(F)
+Base.convert(::Type{Float32}, ::TinyNumber) = 1.0f-6
+Base.convert(::Type{Float64}, ::TinyNumber) = 1e-12
 Base.convert(::Type{BigFloat}, ::TinyNumber) = big"1e-24"
 
-Base.promote_rule(::Type{TinyNumber}, ::Type{I}) where {I <: Integer}       = promote_rule(TinyNumber, promote_type(I, Float64))
-Base.promote_rule(::Type{TinyNumber}, ::Type{F}) where {F <: AbstractFloat} = F
+Base.promote_rule(::Type{TinyNumber}, ::Type{I}) where {I<:Integer} = promote_type(TinyNumber, promote_type(I, Float64))
+Base.promote_rule(::Type{TinyNumber}, ::Type{F}) where {F<:AbstractFloat} = F
 
-(::Type{T})(::TinyNumber) where {T <: AbstractFloat} = convert(T, tiny)
+(::Type{T})(::TinyNumber) where {T<:AbstractFloat} = convert(T, tiny)
 
-(::TinyNumber)(::Type{ T }) where {T} = convert(T, TinyNumber())
-(::TinyNumber)(something)             = convert(typeof(something), TinyNumber())
+(::TinyNumber)(::Type{T}) where {T} = convert(T, TinyNumber())
+(::TinyNumber)(something) = convert(typeof(something), TinyNumber())
 
 """
     tiny
@@ -69,18 +69,18 @@ struct HugeNumber <: Real end
 
 Base.show(io::IO, ::HugeNumber) = print(io, "huge")
 
-Base.convert(::Type{F}, ::HugeNumber) where {F <: AbstractFloat} = inv(tiny(F))
-Base.convert(::Type{Float32}, ::HugeNumber)  = 1.0f+6
-Base.convert(::Type{Float64}, ::HugeNumber)  = 1e+12
+Base.convert(::Type{F}, ::HugeNumber) where {F<:AbstractFloat} = inv(tiny(F))
+Base.convert(::Type{Float32}, ::HugeNumber) = 1.0f+6
+Base.convert(::Type{Float64}, ::HugeNumber) = 1e+12
 Base.convert(::Type{BigFloat}, ::HugeNumber) = big"1e+24"
 
-Base.promote_rule(::Type{HugeNumber}, ::Type{I}) where {I <: Integer}       = promote_rule(HugeNumber, promote_type(I, Float64))
-Base.promote_rule(::Type{HugeNumber}, ::Type{F}) where {F <: AbstractFloat} = F
+Base.promote_rule(::Type{HugeNumber}, ::Type{I}) where {I<:Integer} = promote_type(HugeNumber, promote_type(I, Float64))
+Base.promote_rule(::Type{HugeNumber}, ::Type{F}) where {F<:AbstractFloat} = F
 
-(::Type{T})(::HugeNumber) where {T <: AbstractFloat} = convert(T, huge)
+(::Type{T})(::HugeNumber) where {T<:AbstractFloat} = convert(T, huge)
 
-(::HugeNumber)(::Type{ T }) where {T} = convert(T, HugeNumber())
-(::HugeNumber)(something)             = convert(typeof(something), HugeNumber())
+(::HugeNumber)(::Type{T}) where {T} = convert(T, HugeNumber())
+(::HugeNumber)(something) = convert(typeof(something), HugeNumber())
 
 """
     huge
@@ -120,9 +120,8 @@ const huge = HugeNumber()
 
 ## ------------------------------------------------------------------------------------ ##
 
-Base.promote_type(::Type{T}, ::Type{TinyNumber}, ::Type{HugeNumber}) where {T} =
-    promote_type(promote_type(T, TinyNumber), HugeNumber)
-Base.promote_type(::Type{T}, ::Type{HugeNumber}, ::Type{TinyNumber}) where {T} =
-    promote_type(promote_type(T, HugeNumber), TinyNumber)
+Base.promote_rule(::Type{Union{TinyNumber, HugeNumber}}, ::Type{T}) where {T} = T
+Base.promote_rule(::Type{TinyNumber}, ::Type{HugeNumber}) = Union{TinyNumber, HugeNumber}
+Base.promote_rule(::Type{HugeNumber}, ::Type{TinyNumber}) = Union{TinyNumber, HugeNumber}
 
 end
