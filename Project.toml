@@ -1,7 +1,7 @@
 name = "TinyHugeNumbers"
 uuid = "783c9a47-75a3-44ac-a16b-f1ab7b3acf04"
 authors = ["Bagaev Dmitry <bvdmitri@gmail.com> and contributors"]
-version = "1.0.0"
+version = "1.0.1"
 
 [compat]
 julia = "1"
