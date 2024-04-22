@@ -75,12 +75,9 @@ struct ArbitraryFloatType <: AbstractFloat end
         @test @inferred(promote_type(T, HugeNumber, TinyNumber)) == T
     end
 
-    @test_throws "Cannot convert `tiny` to `huge`" [tiny, huge]
-    @test_throws "Cannot convert `huge` to `tiny`" [huge, tiny]
-
     for a in (1, 1.0, 0, 0.0, 1.0f0, 0.0f0, Int32(0), Int32(1), big"1", big"1.0", big"0", big"0.0")
         T = typeof(a)
-        for v in Real[tiny, huge]
+        for v in [tiny, huge]
             V = typeof(v)
 
             for op in [+, -, *, /, >, >=, <, <=]

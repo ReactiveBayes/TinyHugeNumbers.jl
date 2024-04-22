@@ -120,23 +120,8 @@ const huge = HugeNumber()
 
 ## ------------------------------------------------------------------------------------ ##
 
-# A special structure that is used to promote `TinyNumber` and `HugeNumber` to the same type
-# but it cannot be instantiated, this might be useful in situations like `clamp(value, tiny, huge)`
-# in this case Julia attempts first to promote `tiny` and `huge` to the same type and then
-# uses the result to promote `value` to the resulting type. However, there is no "common" type for
-# both `tiny` and `huge` so we introduce a special structure that will accomodate that
-# see also: https://github.com/ReactiveBayes/TinyHugeNumbers.jl/issues/3
-struct PromoteTinyOrHuge end
-
-PromoteTinyOrHuge() = error("Cannot instantiate an internal structure for promotion.")
-
-Base.promote_rule(::Type{T}, ::Type{PromoteTinyOrHuge}) where {T} = T
-Base.promote_rule(::Type{PromoteTinyOrHuge}, ::Type{PromoteTinyOrHuge}) = PromoteTinyOrHuge
-Base.promote_rule(::Type{TinyNumber}, ::Type{PromoteTinyOrHuge}) = PromoteTinyOrHuge
-Base.promote_rule(::Type{HugeNumber}, ::Type{PromoteTinyOrHuge}) = PromoteTinyOrHuge
-Base.promote_rule(::Type{TinyNumber}, ::Type{HugeNumber}) = PromoteTinyOrHuge
-
-Base.convert(::Type{PromoteTinyOrHuge}, ::TinyNumber) = error("Cannot convert `tiny` to `huge`. Are you trying to put `tiny` and `huge` in the same container (e.g. `Array`)?")
-Base.convert(::Type{PromoteTinyOrHuge}, ::HugeNumber) = error("Cannot convert `huge` to `tiny`. Are you trying to put `tiny` and `huge` in the same container (e.g. `Array`)?")
+Base.promote_rule(::Type{Union{TinyNumber, HugeNumber}}, ::Type{T}) where {T} = T
+Base.promote_rule(::Type{TinyNumber}, ::Type{HugeNumber}) = Union{TinyNumber, HugeNumber}
+Base.promote_rule(::Type{HugeNumber}, ::Type{TinyNumber}) = Union{TinyNumber, HugeNumber}
 
 end
