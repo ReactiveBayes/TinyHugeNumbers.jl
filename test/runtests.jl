@@ -2,11 +2,12 @@ using TinyHugeNumbers, Aqua, Test
 
 Aqua.test_all(TinyHugeNumbers, deps_compat=(; check_extras=false, check_weakdeps=true))
 
+import TinyHugeNumbers: TinyNumber, HugeNumber
+
+struct ArbitraryFloatType <: AbstractFloat end
+
 @testset "TinyHugeNumbers.jl" begin
-    import TinyHugeNumbers: TinyNumber, HugeNumber
-
-    struct ArbitraryFloatType <: AbstractFloat end
-
+    
     Base.eps(::Type{ArbitraryFloatType}) = 0.1
     Base.convert(::Type{ArbitraryFloatType}, ::Integer) = ArbitraryFloatType() # for testing
 
