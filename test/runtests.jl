@@ -1,18 +1,19 @@
-using TinyHugeNumbers
-using Test
+using TinyHugeNumbers, Aqua, Test
+
+Aqua.test_all(TinyHugeNumbers, deps_compat=(; check_extras=false, check_weakdeps=true))
 
 import TinyHugeNumbers: TinyNumber, HugeNumber
 
-struct ArbitraryFloatType <: AbstractFloat end 
+struct ArbitraryFloatType <: AbstractFloat end
 
 @testset "TinyHugeNumbers.jl" begin
-
-    Base.eps(::Type{ ArbitraryFloatType }) = 0.1
-    Base.convert(::Type{ ArbitraryFloatType }, ::Integer) = ArbitraryFloatType() # for testing
+    
+    Base.eps(::Type{ArbitraryFloatType}) = 0.1
+    Base.convert(::Type{ArbitraryFloatType}, ::Integer) = ArbitraryFloatType() # for testing
 
     @test repr(tiny) == "tiny"
     @test repr(huge) == "huge"
-    
+
     @test typeof(tiny) === TinyNumber
     @test typeof(huge) === HugeNumber
 
@@ -77,7 +78,7 @@ struct ArbitraryFloatType <: AbstractFloat end
 
     for a in (1, 1.0, 0, 0.0, 1.0f0, 0.0f0, Int32(0), Int32(1), big"1", big"1.0", big"0", big"0.0")
         T = typeof(a)
-        for v in [tiny, huge]
+        for v in Real[tiny, huge]
             V = typeof(v)
 
             for op in [+, -, *, /, >, >=, <, <=]
@@ -108,4 +109,44 @@ struct ArbitraryFloatType <: AbstractFloat end
         end
     end
 
+end
+
+@testset "ForwardDiff.jl compatibility" begin
+    import ForwardDiff
+
+    f(x) = clamp(x, tiny, huge)
+
+    @test @inferred(ForwardDiff.derivative(f, 1.0)) === 1.0
+    @test @inferred(ForwardDiff.derivative(f, 2.0)) === 1.0
+    @test @inferred(ForwardDiff.derivative(f, 0.0)) === 0.0
+    @test @inferred(ForwardDiff.derivative(f, huge + 1.0)) === 0.0
+    @test @inferred(ForwardDiff.derivative(f, tiny - 1.0)) === 0.0
+
+    g(x) = clamp(x^2, tiny, huge)
+
+    @test @inferred(ForwardDiff.derivative(g, 1.0)) === 2.0
+    @test @inferred(ForwardDiff.derivative(g, 2.0)) === 4.0
+    @test @inferred(ForwardDiff.derivative(g, 0.0)) === 0.0
+    @test @inferred(ForwardDiff.derivative(g, huge + 1.0)) === 0.0
+    @test @inferred(ForwardDiff.derivative(g, tiny - 1.0)) === 2(tiny - 1.0)
+end
+
+@testset "Storing `tiny` and `huge` in arrays" begin
+    @static if VERSION >= v"1.10"
+        @test_throws "Cannot convert `tiny` to `huge`" [tiny, huge]
+        @test_throws "Cannot convert `huge` to `tiny`" [huge, tiny]
+    else
+        @test_throws ErrorException [tiny, huge]
+        @test_throws ErrorException [huge, tiny]
+    end
+
+    for a in (1.0, 0.0, 1.0f0, 0.0f0, big"1.0", big"0.0")
+        @test [a, tiny, huge] == [a, tiny(a), huge(a)]
+        @test [tiny, a, huge] == [tiny(a), a, huge(a)]
+        @test [tiny, huge, a] == [tiny(a), huge(a), a]
+
+        @test [a, huge, tiny] == [a, huge(a), tiny(a)]
+        @test [huge, a, tiny] == [huge(a), a, tiny(a)]
+        @test [huge, tiny, a] == [huge(a), tiny(a), a]
+    end
 end
