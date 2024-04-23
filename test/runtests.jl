@@ -1,18 +1,18 @@
-using TinyHugeNumbers
-using Test
+using TinyHugeNumbers, Aqua, Test
 
-import TinyHugeNumbers: TinyNumber, HugeNumber
-
-struct ArbitraryFloatType <: AbstractFloat end 
+Aqua.test_all(TinyHugeNumbers, deps_compat = (; check_extras = false, check_weakdeps = true))
 
 @testset "TinyHugeNumbers.jl" begin
+    import TinyHugeNumbers: TinyNumber, HugeNumber
 
-    Base.eps(::Type{ ArbitraryFloatType }) = 0.1
-    Base.convert(::Type{ ArbitraryFloatType }, ::Integer) = ArbitraryFloatType() # for testing
+    struct ArbitraryFloatType <: AbstractFloat end
+
+    Base.eps(::Type{ArbitraryFloatType}) = 0.1
+    Base.convert(::Type{ArbitraryFloatType}, ::Integer) = ArbitraryFloatType() # for testing
 
     @test repr(tiny) == "tiny"
     @test repr(huge) == "huge"
-    
+
     @test typeof(tiny) === TinyNumber
     @test typeof(huge) === HugeNumber
 
@@ -75,9 +75,12 @@ struct ArbitraryFloatType <: AbstractFloat end
         @test @inferred(promote_type(T, HugeNumber, TinyNumber)) == T
     end
 
+    @test_throws "Cannot convert `tiny` to `huge`" [tiny, huge]
+    @test_throws "Cannot convert `huge` to `tiny`" [huge, tiny]
+
     for a in (1, 1.0, 0, 0.0, 1.0f0, 0.0f0, Int32(0), Int32(1), big"1", big"1.0", big"0", big"0.0")
         T = typeof(a)
-        for v in [tiny, huge]
+        for v in Real[tiny, huge]
             V = typeof(v)
 
             for op in [+, -, *, /, >, >=, <, <=]
@@ -108,4 +111,24 @@ struct ArbitraryFloatType <: AbstractFloat end
         end
     end
 
+end
+
+@testset "ForwardDiff.jl compatibility" begin
+    import ForwardDiff
+    
+    f(x) = clamp(x, tiny, huge)
+
+    @test @inferred(ForwardDiff.derivative(f, 1.0)) === 1.0
+    @test @inferred(ForwardDiff.derivative(f, 2.0)) === 1.0
+    @test @inferred(ForwardDiff.derivative(f, 0.0)) === 0.0
+    @test @inferred(ForwardDiff.derivative(f, huge+1.0)) === 0.0
+    @test @inferred(ForwardDiff.derivative(f, tiny-1.0)) === 0.0
+
+    g(x) = clamp(x^2, tiny, huge)
+
+    @test @inferred(ForwardDiff.derivative(g, 1.0)) === 2.0
+    @test @inferred(ForwardDiff.derivative(g, 2.0)) === 4.0
+    @test @inferred(ForwardDiff.derivative(g, 0.0)) === 0.0
+    @test @inferred(ForwardDiff.derivative(g, huge+1.0)) === 0.0
+    @test @inferred(ForwardDiff.derivative(g, tiny-1.0)) === 2(tiny-1.0)
 end

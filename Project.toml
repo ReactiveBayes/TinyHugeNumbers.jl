@@ -1,13 +1,15 @@
 name = "TinyHugeNumbers"
 uuid = "783c9a47-75a3-44ac-a16b-f1ab7b3acf04"
 authors = ["Bagaev Dmitry <bvdmitri@gmail.com> and contributors"]
-version = "1.0.1"
+version = "1.0.2"
 
 [compat]
 julia = "1"
 
 [extras]
+Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test"]
+test = ["Aqua", "ForwardDiff", "Test"]
