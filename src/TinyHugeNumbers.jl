@@ -133,7 +133,9 @@ struct PromoteTinyOrHuge
     PromoteTinyOrHuge() = error("Cannot instantiate an internal structure for promotion.")
 end
 
-Base.promote_rule(::Type{T}, ::Type{PromoteTinyOrHuge}) where {T<:Real} = T
+Base.promote_rule(::Type{PromoteTinyOrHuge}, ::Type{I}) where {I<:Integer} = promote_type(PromoteTinyOrHuge, promote_type(I, Float64))
+Base.promote_rule(::Type{PromoteTinyOrHuge}, ::Type{F}) where {F<:AbstractFloat} = F
+
 Base.promote_rule(::Type{PromoteTinyOrHuge}, ::Type{PromoteTinyOrHuge}) = PromoteTinyOrHuge
 Base.promote_rule(::Type{TinyNumber}, ::Type{HugeNumber}) = PromoteTinyOrHuge
 
