@@ -143,4 +143,43 @@ Base.promote_rule(::Type{TinyNumber}, ::Type{HugeNumber}) = PromoteTinyOrHuge
 Base.convert(::Type{PromoteTinyOrHuge}, ::TinyNumber) = error("Cannot convert `tiny` to `huge`. Are you trying to put `tiny` and `huge` in the same container (e.g. `Array`)?")
 Base.convert(::Type{PromoteTinyOrHuge}, ::HugeNumber) = error("Cannot convert `huge` to `tiny`. Are you trying to put `tiny` and `huge` in the same container (e.g. `Array`)?")
 
+# A total order between the sentinels themselves. Generic `Real` comparisons promote
+# their arguments first, and `promote_type(TinyNumber, HugeNumber)` collapses to the
+# uninstantiable `PromoteTinyOrHuge` above, so comparing `tiny` and `huge` directly would
+# otherwise throw the "Cannot convert" error (or recurse for same-type comparisons).
+# We define the ordering explicitly instead so `<`, `min`, `max`, `extrema`, ... work.
+# `tiny < huge` by definition; each sentinel is equal only to itself.
+# see also: https://github.com/ReactiveBayes/TinyHugeNumbers.jl/issues/7
+Base.isless(::TinyNumber, ::HugeNumber) = true
+Base.isless(::HugeNumber, ::TinyNumber) = false
+Base.isless(::TinyNumber, ::TinyNumber) = false
+Base.isless(::HugeNumber, ::HugeNumber) = false
+
+Base.:(<)(::TinyNumber, ::HugeNumber) = true
+Base.:(<)(::HugeNumber, ::TinyNumber) = false
+Base.:(<)(::TinyNumber, ::TinyNumber) = false
+Base.:(<)(::HugeNumber, ::HugeNumber) = false
+
+Base.:(<=)(::TinyNumber, ::HugeNumber) = true
+Base.:(<=)(::HugeNumber, ::TinyNumber) = false
+Base.:(<=)(::TinyNumber, ::TinyNumber) = true
+Base.:(<=)(::HugeNumber, ::HugeNumber) = true
+
+Base.:(==)(::TinyNumber, ::HugeNumber) = false
+Base.:(==)(::HugeNumber, ::TinyNumber) = false
+Base.:(==)(::TinyNumber, ::TinyNumber) = true
+Base.:(==)(::HugeNumber, ::HugeNumber) = true
+
+# `min`/`max` on two `Real`s also promote their arguments before comparing, so they need
+# explicit sentinel methods too (they do not simply route through `isless` above).
+Base.min(::TinyNumber, ::HugeNumber) = tiny
+Base.min(::HugeNumber, ::TinyNumber) = tiny
+Base.min(::TinyNumber, ::TinyNumber) = tiny
+Base.min(::HugeNumber, ::HugeNumber) = huge
+
+Base.max(::TinyNumber, ::HugeNumber) = huge
+Base.max(::HugeNumber, ::TinyNumber) = huge
+Base.max(::TinyNumber, ::TinyNumber) = tiny
+Base.max(::HugeNumber, ::HugeNumber) = huge
+
 end
