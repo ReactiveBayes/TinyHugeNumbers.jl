@@ -35,6 +35,12 @@ Base.promote_rule(::Type{TinyNumber}, ::Type{F}) where {F<:AbstractFloat} = F
 - `big"1e-24"` for `BigFloat`
 - `10 * eps(F)` for an arbitrary type `F <: AbstractFloat`
 
+!!! note
+    The `BigFloat` value is intentionally fixed at `big"1e-24"` regardless of `setprecision` — it is meant to be a stable small floor, not to track `eps(BigFloat)`.
+
+!!! note
+    `tiny`/`huge` are only meaningful for floating-point types where `10 * eps(F) ≪ 1` (e.g. `Float32`, `Float64`, `BigFloat`). Low-precision types such as `Float16` fall through to the generic `10 * eps(F)` definition and produce degenerate values (`tiny(Float16) ≈ 0.0098`, `huge(Float16) ≈ 102.4`).
+
 # Example
 ```jldoctest 
 julia> tiny
@@ -92,6 +98,12 @@ Base.promote_rule(::Type{HugeNumber}, ::Type{F}) where {F<:AbstractFloat} = F
 - `1e+12` for `Float64`
 - `big"1e+24"` for `BigFloat`
 - `inv(tiny(F))` for an arbitrary type `F <: AbstractFloat`
+
+!!! note
+    The `BigFloat` value is intentionally fixed at `big"1e+24"` regardless of `setprecision` — it is meant to be a stable large ceiling, not to track `eps(BigFloat)`.
+
+!!! note
+    `tiny`/`huge` are only meaningful for floating-point types where `10 * eps(F) ≪ 1` (e.g. `Float32`, `Float64`, `BigFloat`). Low-precision types such as `Float16` fall through to the generic `inv(tiny(F))` definition and produce degenerate values (`huge(Float16) ≈ 102.4` — not "huge" at all).
 
 # Example
 ```jldoctest 
