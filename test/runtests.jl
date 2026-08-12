@@ -82,11 +82,10 @@ struct ArbitraryFloatType <: AbstractFloat end
             V = typeof(v)
 
             for op in [+, -, *, /, >, >=, <, <=]
+                # lines below already wrap `op(a, v)` / `op(v, a)` in `@inferred` *and*
+                # check the value against the promoted-through-a-real-float expected
                 @test @inferred op(a, v) == op(a, convert(promote_type(T, V), v))
                 @test @inferred op(v, a) == op(convert(promote_type(T, V), v), a)
-
-                @test @inferred op(a, v) == op(a, v)
-                @test @inferred op(v, a) == op(v, a)
             end
 
             @test v <= (@inferred clamp(a, v, Inf)) <= Inf
@@ -97,18 +96,67 @@ struct ArbitraryFloatType <: AbstractFloat end
                     for op in [+, -, *, /, >, >=, <, <=]
                         @test @inferred op.(array, v) == op.(array, convert(promote_type(T, V), v))
                         @test @inferred op.(v, array) == op.(convert(promote_type(T, V), v), array)
-
-                        @test @inferred op.(array, v) == op.(array, v)
-                        @test @inferred op.(v, array) == op.(v, array)
                     end
 
-                    @test @inferred clamp.(array, v, Inf) == clamp.(array, v, Inf)
-                    @test @inferred clamp.(array, zero(array), v) == clamp.(array, zero(array), v)
+                    # `@inferred` needs a plain call expression, not broadcast syntax `f.(x)`,
+                    # so spell the broadcast as `broadcast(clamp, ...)` to infer the array result.
+                    # The `Inf` upper bound is a `Float64`, so it participates in `clamp`'s
+                    # promotion — the expected must convert `v` through `promote_type(T, V, Float64)`.
+                    @test @inferred(broadcast(clamp, array, v, Inf)) == clamp.(array, convert(promote_type(T, V, typeof(Inf)), v), Inf)
+                    @test @inferred(broadcast(clamp, array, zero(array), v)) == clamp.(array, zero(array), convert(promote_type(T, V), v))
                 end
             end
         end
     end
 
+end
+
+@testset "Ordering between `tiny` and `huge`" begin
+    # regression test for https://github.com/ReactiveBayes/TinyHugeNumbers.jl/issues/7
+    @test tiny < huge
+    @test !(huge < tiny)
+    @test huge > tiny
+    @test !(tiny > huge)
+
+    @test tiny <= huge
+    @test huge >= tiny
+    @test !(huge <= tiny)
+    @test !(tiny >= huge)
+
+    @test isless(tiny, huge)
+    @test !isless(huge, tiny)
+
+    @test !(tiny == huge)
+    @test !(huge == tiny)
+
+    # reflexive same-type comparisons
+    @test tiny == tiny
+    @test huge == huge
+    @test !(tiny < tiny)
+    @test !(huge < huge)
+    @test tiny <= tiny
+    @test huge >= huge
+    @test !isless(tiny, tiny)
+    @test !isless(huge, huge)
+
+    # `min`/`max`/`extrema` must not throw and must pick the right sentinel
+    @test min(tiny, huge) === tiny
+    @test min(huge, tiny) === tiny
+    @test max(tiny, huge) === huge
+    @test max(huge, tiny) === huge
+    @test min(tiny, tiny) === tiny
+    @test max(huge, huge) === huge
+
+    for F in (Float32, Float64, BigFloat)
+        @test extrema([one(F), tiny(F), huge(F)]) == (tiny(F), huge(F))
+    end
+
+    # storing both sentinels in one container must still throw (design is unchanged)
+    @static if VERSION >= v"1.10"
+        @test_throws "Cannot convert `tiny` to `huge`" [tiny, huge]
+    else
+        @test_throws ErrorException [tiny, huge]
+    end
 end
 
 @testset "ForwardDiff.jl compatibility" begin
